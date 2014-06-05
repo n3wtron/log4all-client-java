@@ -51,10 +51,18 @@ public class Log4AllClient {
     }
 
     public boolean log(String msg) throws Log4AllException {
-        HttpPost addLogPost = new HttpPost(url+"/api/logs/add");
-        JSONObject jsonData = new JSONObject();
+        JSONObject jsonData = null;
         try {
-            jsonData.put("log",msg);
+            jsonData = toJSON(msg);
+            return log(jsonData);
+        } catch (JSONException e) {
+            throw  new Log4AllException(e.getMessage(),e);
+        }
+    }
+
+    public boolean log(JSONObject jsonData) throws Log4AllException {
+        HttpPost addLogPost = new HttpPost(url+"/api/logs/add");
+        try {
             HttpEntity postData = new StringEntity(jsonData.toString());
             addLogPost.setEntity(postData);
             HttpResponse resp = getHttpClient().execute(addLogPost);
@@ -64,6 +72,12 @@ public class Log4AllClient {
         } catch (Exception e) {
             throw new Log4AllException(e.getMessage(),e);
         }
+    }
+
+    public static JSONObject toJSON(String msg) throws JSONException {
+        JSONObject jsonData = new JSONObject();
+        jsonData.put("log",msg);
+        return jsonData;
     }
 
     public String getUrl() {

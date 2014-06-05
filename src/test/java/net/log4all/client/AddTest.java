@@ -1,7 +1,6 @@
 package net.log4all.client;
 
 import junit.framework.Assert;
-import net.log4all.client.Log4AllClient;
 import net.log4all.client.exceptions.Log4AllException;
 import org.testng.annotations.Test;
 
