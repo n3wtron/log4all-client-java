@@ -14,11 +14,14 @@ import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  * Created by igor on 03/06/14.
@@ -60,23 +63,50 @@ public class Log4AllClient {
         }
     }
 
+    public boolean log(String msg, String[] stack) throws Log4AllException {
+        JSONObject jsonData = null;
+        try {
+            jsonData = toJSON(msg,stack,new Date());
+            return log(jsonData);
+        } catch (JSONException e) {
+            throw  new Log4AllException(e.getMessage(),e);
+        }
+    }
+
     public boolean log(JSONObject jsonData) throws Log4AllException {
+        return sendJson(jsonData);
+    }
+
+    public boolean log(JSONArray jsonArray) throws Log4AllException {
+        return sendJson(jsonArray);
+    }
+
+    public boolean sendJson(Object jsonData) throws Log4AllException {
         HttpPost addLogPost = new HttpPost(url+"/api/logs/add");
+        String rawResponse="";
         try {
             HttpEntity postData = new StringEntity(jsonData.toString());
             addLogPost.setEntity(postData);
             HttpResponse resp = getHttpClient().execute(addLogPost);
-            String rawResponse = IOUtils.toString(resp.getEntity().getContent());
+            rawResponse = IOUtils.toString(resp.getEntity().getContent());
             JSONObject jsonResp = new JSONObject(rawResponse);
             return jsonResp.getBoolean("result");
         } catch (Exception e) {
-            throw new Log4AllException(e.getMessage(),e);
+            throw new Log4AllException(e.getMessage()+"httpResp:"+rawResponse,e);
         }
     }
 
     public static JSONObject toJSON(String msg) throws JSONException {
         JSONObject jsonData = new JSONObject();
         jsonData.put("log",msg);
+        return jsonData;
+    }
+
+    public static JSONObject toJSON(String msg, String[] stack,Date date) throws JSONException {
+        JSONObject jsonData = new JSONObject();
+        jsonData.put("log",msg);
+        jsonData.put("date",date.getTime());
+        jsonData.put("stack",new JSONArray(Arrays.asList(stack)));
         return jsonData;
     }
 
@@ -87,4 +117,7 @@ public class Log4AllClient {
     public void setUrl(String url) {
         this.url = url;
     }
+
+
+
 }
