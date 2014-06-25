@@ -29,13 +29,15 @@ import java.util.Date;
 public class Log4AllClient {
     private String url;
     private HttpHost proxy;
+    private String application;
 
-    public Log4AllClient(String url) {
+    public Log4AllClient(String url,String application) {
         this.url = url;
+        this.application = application;
     }
 
-    public Log4AllClient(String url, HttpHost proxy) {
-        this.url = url;
+    public Log4AllClient(String url,String application, HttpHost proxy) {
+        this(url,application);
         this.proxy = proxy;
     }
 
@@ -53,20 +55,20 @@ public class Log4AllClient {
         return builder.build();
     }
 
-    public boolean log(String msg) throws Log4AllException {
+    public boolean log(String msg,String level) throws Log4AllException {
         JSONObject jsonData = null;
         try {
-            jsonData = toJSON(msg);
+            jsonData = toJSON(msg,level);
             return log(jsonData);
         } catch (JSONException e) {
             throw  new Log4AllException(e.getMessage(),e);
         }
     }
 
-    public boolean log(String msg, String[] stack) throws Log4AllException {
+    public boolean log(String msg, String level,String[] stack) throws Log4AllException {
         JSONObject jsonData = null;
         try {
-            jsonData = toJSON(msg,stack,new Date());
+            jsonData = toJSON(msg,level,stack,new Date());
             return log(jsonData);
         } catch (JSONException e) {
             throw  new Log4AllException(e.getMessage(),e);
@@ -78,14 +80,23 @@ public class Log4AllClient {
     }
 
     public boolean log(JSONArray jsonArray) throws Log4AllException {
-        return sendJson(jsonArray);
+        JSONObject jsonData = new JSONObject();
+        try {
+            jsonData.put("logs",jsonArray);
+        } catch (JSONException e) {
+            return false;
+        }
+        return sendJson(jsonData);
+
     }
 
     public boolean sendJson(Object jsonData) throws Log4AllException {
         HttpPost addLogPost = new HttpPost(url+"/api/logs/add");
         String rawResponse="";
         try {
-            HttpEntity postData = new StringEntity(jsonData.toString());
+            JSONObject jsonObj = (JSONObject) jsonData;
+            jsonObj.put("application",this.application);
+            HttpEntity postData = new StringEntity(jsonObj.toString());
             addLogPost.setEntity(postData);
             HttpResponse resp = getHttpClient().execute(addLogPost);
             rawResponse = IOUtils.toString(resp.getEntity().getContent());
@@ -96,15 +107,24 @@ public class Log4AllClient {
         }
     }
 
-    public static JSONObject toJSON(String msg) throws JSONException {
+    public static JSONObject toJSON(String msg,String level) throws JSONException {
         JSONObject jsonData = new JSONObject();
         jsonData.put("log",msg);
+        jsonData.put("level",level);
+        return jsonData;
+    }
+    public static JSONObject toJSON(String msg,String level, Date date) throws JSONException {
+        JSONObject jsonData = new JSONObject();
+        jsonData.put("log",msg);
+        jsonData.put("level",level);
+        jsonData.put("date",date.getTime());
         return jsonData;
     }
 
-    public static JSONObject toJSON(String msg, String[] stack,Date date) throws JSONException {
+    public static JSONObject toJSON(String msg, String level,String[] stack,Date date) throws JSONException {
         JSONObject jsonData = new JSONObject();
         jsonData.put("log",msg);
+        jsonData.put("level",level);
         jsonData.put("date",date.getTime());
         jsonData.put("stack",new JSONArray(Arrays.asList(stack)));
         return jsonData;

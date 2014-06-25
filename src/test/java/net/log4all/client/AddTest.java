@@ -12,7 +12,7 @@ import java.util.UUID;
 public class AddTest {
     @Test(threadPoolSize = 10,invocationCount = 1000)
     public void addLog() throws Log4AllException {
-        Log4AllClient cl = new Log4AllClient("http://localhost:6543");
-        Assert.assertTrue(cl.log("Test da client java #client:java #rand:"+ UUID.randomUUID().toString()));
+        Log4AllClient cl = new Log4AllClient("http://localhost:6543","log4all-test-app");
+        Assert.assertTrue(cl.log("Test da client java #client:java #rand:"+ UUID.randomUUID().toString(),"INFO"));
     }
 }
