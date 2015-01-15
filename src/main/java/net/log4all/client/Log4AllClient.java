@@ -1,27 +1,23 @@
 package net.log4all.client;
 
+import java.util.Arrays;
+import java.util.Date;
+
 import net.log4all.client.exceptions.Log4AllException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Date;
 
 /**
  * Created by igor on 03/06/14.
@@ -65,7 +61,7 @@ public class Log4AllClient {
         }
     }
 
-    public boolean log(String msg, String level,String[] stack) throws Log4AllException {
+    public boolean log(String msg, String level,String stack) throws Log4AllException {
         JSONObject jsonData = null;
         try {
             jsonData = toJSON(msg,level,stack,new Date());
@@ -101,7 +97,7 @@ public class Log4AllClient {
             HttpResponse resp = getHttpClient().execute(addLogPost);
             rawResponse = IOUtils.toString(resp.getEntity().getContent());
             JSONObject jsonResp = new JSONObject(rawResponse);
-            return jsonResp.getBoolean("result");
+            return jsonResp.getBoolean("success");
         } catch (Exception e) {
             throw new Log4AllException(e.getMessage()+"httpResp:"+rawResponse,e);
         }
@@ -109,24 +105,24 @@ public class Log4AllClient {
 
     public static JSONObject toJSON(String msg,String level) throws JSONException {
         JSONObject jsonData = new JSONObject();
-        jsonData.put("log",msg);
+        jsonData.put("message",msg);
         jsonData.put("level",level);
         return jsonData;
     }
     public static JSONObject toJSON(String msg,String level, Date date) throws JSONException {
         JSONObject jsonData = new JSONObject();
-        jsonData.put("log",msg);
+        jsonData.put("message",msg);
         jsonData.put("level",level);
         jsonData.put("date",date.getTime());
         return jsonData;
     }
 
-    public static JSONObject toJSON(String msg, String level,String[] stack,Date date) throws JSONException {
+    public static JSONObject toJSON(String msg, String level,String stack,Date date) throws JSONException {
         JSONObject jsonData = new JSONObject();
-        jsonData.put("log",msg);
+        jsonData.put("message",msg);
         jsonData.put("level",level);
         jsonData.put("date",date.getTime());
-        jsonData.put("stack",new JSONArray(Arrays.asList(stack)));
+        jsonData.put("stack",stack);
         return jsonData;
     }
 
