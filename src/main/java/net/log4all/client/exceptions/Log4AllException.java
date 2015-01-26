@@ -4,7 +4,9 @@ package net.log4all.client.exceptions;
  * Created by igor on 03/06/14.
  */
 public class Log4AllException extends Exception{
-    public Log4AllException() {
+	private static final long serialVersionUID = 1L;
+
+	public Log4AllException() {
     }
 
     public Log4AllException(String message) {
