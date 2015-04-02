@@ -11,7 +11,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
@@ -86,28 +86,33 @@ public class Log4AllClient {
 	}
 
 	public void log(JSONArray jsonArray) throws Log4AllException {
-		JSONObject jsonData = new JSONObject();
-		try {
-			jsonData.put("logs", jsonArray);
-		} catch (JSONException e) {
-			throw new Log4AllException(e.getMessage(), e);
-		}
-		sendJson(jsonData);
+		sendJson(jsonArray);
 	}
 
 	public void sendJson(Object jsonData) throws Log4AllException {
-		HttpPost addLogPost = new HttpPost(url + "/api/logs/add");
+		HttpPut addLogPut;
+		if (jsonData instanceof JSONArray){
+			addLogPut = new HttpPut(url + "/api/logs");
+		}else{
+			addLogPut = new HttpPut(url + "/api/log");
+		}
 		String rawResponse = "";
 		JSONObject jsonResp;
 		try {
-			JSONObject jsonObj = (JSONObject) jsonData;
-			jsonObj.put("application", this.application);
-			if (token!=null){
-				jsonObj.put("application_token", this.token);	
+			JSONObject jsonReq;
+			if (jsonData instanceof JSONArray){
+				jsonReq = new JSONObject();
+				jsonReq.put("logs", jsonData);
+			}else{
+				jsonReq= (JSONObject) jsonData;
 			}
-			HttpEntity postData = new StringEntity(jsonObj.toString());
-			addLogPost.setEntity(postData);
-			HttpResponse resp = getHttpClient().execute(addLogPost);
+			jsonReq.put("application", this.application);
+			if (token!=null){
+				jsonReq.put("application_token", this.token);	
+			}
+			HttpEntity postData = new StringEntity(jsonReq.toString());
+			addLogPut.setEntity(postData);
+			HttpResponse resp = getHttpClient().execute(addLogPut);
 			rawResponse = IOUtils.toString(resp.getEntity().getContent());
 			jsonResp = new JSONObject(rawResponse);
 			if (!jsonResp.getBoolean("success")) {

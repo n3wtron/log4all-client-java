@@ -27,13 +27,20 @@ public class AddTest {
 	
     @Test(threadPoolSize = 10,invocationCount = 1)
     public void addLog() throws Log4AllException {
-        Log4AllClient cl = new Log4AllClient("http://localhost:6543","test","TEST_TOKEN");
-        cl.log("Test da client java #client:java #rand:"+ UUID.randomUUID().toString(),"INFO",trash);
+        Log4AllClient cl = new Log4AllClient("http://localhost:9000","test");
+        cl.log("Test da client java #client:java #rand:"+ UUID.randomUUID().toString(),"INFO");
     }
     
-    @Test(threadPoolSize = 10,invocationCount = 10)
+    @Test(threadPoolSize = 10,invocationCount = 1)
+    public void addLogWithStack() throws Log4AllException {
+        Log4AllClient cl = new Log4AllClient("http://localhost:9000","test");
+        cl.log("Test da client java con ##stack #client:java #rand:"+ UUID.randomUUID().toString(),"INFO",trash);
+    }
+    
+    
+    @Test(threadPoolSize = 10,invocationCount = 10, dependsOnMethods="addLog")
     public void addLogGrouped() throws Log4AllException, JSONException {
-        Log4AllClient cl = new Log4AllClient("http://localhost:6543","test","TEST_TOKEN");
+        Log4AllClient cl = new Log4AllClient("http://localhost:9000","test");
         JSONArray logs = new JSONArray();
         for (int i=0;i<100;i++){
         	logs.put(Log4AllClient.toJSON("Test da client java #client:java #rand:"+ UUID.randomUUID().toString(),"INFO",trash,new Date()));
