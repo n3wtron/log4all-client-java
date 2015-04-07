@@ -8,12 +8,11 @@ import net.log4all.client.exceptions.Log4AllException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HttpContext;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -24,41 +23,28 @@ import org.codehaus.jettison.json.JSONObject;
  */
 public class Log4AllClient {
 	private String url;
-	private HttpHost proxy;
 	private String application;
 	private String token;
 
-	public Log4AllClient(String url, String application, String token, HttpHost proxy) {
+	public Log4AllClient(String url, String application, String token) {
 		this.url = url;
 		this.application = application;
 		this.token = token;
-		this.proxy = proxy;
-	}
-
-	public Log4AllClient(String url, String application, String token) {
-		this(url, application, token, null);
 	}
 
 	public Log4AllClient(String url, String application) {
-		this(url, application, null, null);
-	}
-
-	public Log4AllClient(String url, String application, HttpHost proxy) {
-		this(url, application, null, proxy);
+		this(url, application, null);
 	}
 
 	private HttpClient getHttpClient() {
-		HttpClientBuilder builder = HttpClientBuilder.create();
-		builder.setConnectionReuseStrategy(new ConnectionReuseStrategy() {
+		DefaultHttpClient client = new DefaultHttpClient();
+		client.setReuseStrategy(new ConnectionReuseStrategy() {
 			@Override
 			public boolean keepAlive(HttpResponse httpResponse, HttpContext httpContext) {
 				return false;
 			}
 		});
-		if (this.proxy != null) {
-			builder.setProxy(this.proxy);
-		}
-		return builder.build();
+		return client;
 	}
 
 	public void log(String msg, String level) throws Log4AllException {
